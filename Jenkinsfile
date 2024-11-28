@@ -1,5 +1,5 @@
 podTemplate(
-    namespace: 'devops-tools' // kaniko pod가 devops-tools에서 실행되도록
+    namespace: 'devops-tools', // kaniko pod가 devops-tools에서 실행되도록
     containers: [
         containerTemplate(
             name: 'kaniko',
