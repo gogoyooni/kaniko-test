@@ -11,11 +11,12 @@ spec:
   containers:
   - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
-    imagePullPolicy: Always
-    command:
-    - sleep
     args:
-    - 9999999
+    - "--dockerfile=Dockerfile"
+    - "--context=git://github.com/gogoyooni/kaniko-test.git" #git://github.com/kunchalavikram1427/connected-app.git#refs/heads/master
+    - "--destination=taeyoondev/kaniko-test:1.1"
+    - "--cache=false"
+    - "--cleanup=true"
     volumeMounts:
       - name: kaniko-secret
         mountPath: /kaniko/.docker
@@ -31,9 +32,9 @@ spec:
         }
     }
 
-    parameters {
-        string name: 'IMAGE_NAME', defaultValue: 'kaniko-test'
-        string name: 'IMAGE_REGISTRY_ACCOUNT', defaultValue: 'taeyoondev'
+    environment {
+        IMAGE_NAME = 'kaniko-test'
+        IMAGE_REGISTRY_ACCOUNT = 'taeyoondev'
     }
 
     stages {
@@ -42,7 +43,7 @@ spec:
                 container(name:'kaniko', shell: '/busyboxy/sh') {
                 sh """#!/busyboox/sh
                     echo "FROM jenkins/inbound-agent:latest" > Dockerfile
-                    /kaniko/executor --context `pwd` --destination ${params.IMAGE_REGISTRY_ACCOUNT}/${params.IMAGE_NAME}:${env.BUILD_NUMBER} --cache false --cleanup true"""
+                    /kaniko/executor --context `pwd` --destination $IMAGE_REGISTRY_ACCOUNT/$IMAGE_NAME:$env.BUILD_NUMBER --cache false --cleanup true"""
                 }
             }
         }
