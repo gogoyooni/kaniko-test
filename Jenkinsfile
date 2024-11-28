@@ -1,39 +1,74 @@
-podTemplate(
-    namespace: 'devops-tools', // kaniko pod가 devops-tools에서 실행되도록
-    containers: [
-        containerTemplate(
-            name: 'kaniko',
-            image: 'gcr.io/kaniko-project/executor:debug',
-            command: 'sleep',
-            args: '99d'
-        )
-    ],
-    volumes: [
-        secretVolume(
-            mountPath: '/kaniko/.docker',
-            secretName: 'regcred'
-        )
-    ]
-) {
-    node(POD_LABEL) {
-        stage('Git Clone') {
-            // GitHub 레포지토리 클론
-            git branch: 'main',
-                url: 'https://github.com/gogoyooni/kaniko-test.git'
+pipeline {
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    jenkins/agent-type: kaniko
+    namespace: devops-tools
+spec:
+  containers:
+    - name: jnlp
+      image: jenkins/inbound-agent:latest
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "500m"
+        limits:
+          memory: "1024Mi"
+          cpu: "1000m"
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:debug
+      command:
+        - /busybox/cat
+      tty: true
+      resources:
+        requests:
+          memory: "400Mi"
+          cpu: "300m"
+        limits:
+          memory: "500Mi"
+          cpu: "500m"
+      volumeMounts:
+        - name: kaniko-secret
+          mountPath: /kaniko/.docker/
+  volumes:
+    - name: regcred
+      secret:
+        secretName: regcred
+        items:
+        - key: .dockerconfigjson
+          path: config.json
+            """
         }
-        
-        stage('Build & Push Docker Image') {
-            container('kaniko') {
-                script {
-                    // Kaniko를 사용하여 도커 이미지 빌드 및 푸시
-                    sh '''
-                        /kaniko/executor \
-                        --context=dir://. \
-                        --dockerfile=Dockerfile \
-                        --destination=taeyoondev/kaniko-test:${BUILD_NUMBER} \
-                    '''
+    }
+
+    environment {
+        DOCKERHUB_USERNAME = "taeyoondev"
+        IMAGE_NAME = "kaniko-test"
+    }
+
+    stages {
+        stage("Build Docker Image & Push to Docker Hub") {
+            steps {
+                container("kaniko") {
+                    script {
+                        def context = "."
+                        def dockerfile = "Dockerfile"
+                        def image = "${DOCKERHUB_USERNAME}/${IMAGE_NAME}:v1.2"
+
+                        sh "/kaniko/executor --context ${context} --dockerfile ${dockerfile} --destination ${image}"
+                    }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo "The process is completed."
         }
     }
 }
