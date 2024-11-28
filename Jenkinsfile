@@ -11,8 +11,6 @@ spec:
   containers:
   - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
-    command: ['sleep']
-    args: ['infinity']
     volumeMounts:
       - name: kaniko-secret
         mountPath: /kaniko/.docker
