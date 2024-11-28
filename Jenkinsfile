@@ -11,6 +11,11 @@ spec:
   containers:
   - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
+    imagePullPolicy: Always
+    command:
+    - sleep
+    args:
+    - 9999999
     volumeMounts:
       - name: kaniko-secret
         mountPath: /kaniko/.docker
