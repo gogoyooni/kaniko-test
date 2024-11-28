@@ -1,4 +1,5 @@
 podTemplate(
+    namespace: 'devops-tools'
     containers: [
         containerTemplate(
             name: 'kaniko',
