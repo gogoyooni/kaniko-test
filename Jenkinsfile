@@ -1,8 +1,6 @@
 pipeline {
     agent {
         kubernetes {
-            label 'kaniko' // 파드 이름
-            defaultContainer 'kaniko' // Kaniko 컨테이너 사용
             yaml """
 apiVersion: v1
 kind: Pod
