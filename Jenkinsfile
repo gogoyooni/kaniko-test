@@ -34,8 +34,10 @@ spec:
     stages {
         stage('Build and Tag Docker Image') {
             steps {
-                container('kaniko') {
-                sh """/kaniko/executor --dockerfile=Dockerfile --context=git://github.com/gogoyooni/kaniko-test.git --destination=${params.IMAGE_REGISTRY_ACCOUNT}/${params.IMAGE_NAME}:${env.BUILD_NUMBER} --cache=false --cleanup=true"""
+                container(name:'kaniko', shell: '/busyboxy/sh') {
+                sh """#!/busyboox/sh
+                    echo "FROM jenkins/inbound-agent:latest" > Dockerfile
+                    /kaniko/executor --context `pwd` --destination ${params.IMAGE_REGISTRY_ACCOUNT}/${params.IMAGE_NAME}:${env.BUILD_NUMBER} --cache false --cleanup true"""
                 }
             }
         }
