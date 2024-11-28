@@ -37,7 +37,7 @@ spec:
     stage('Build and Tag Docker Image') {
         steps {
             container('kaniko') {
-              sh """executor --dockerfile=Dockerfile --context=git://github.com/gogoyooni/kaniko-test.git" --destination=${params.IMAGE_REGISTRY_ACCOUNT}/${params.IMAGE_NAME}:${env.BUILD_NUMBER} --cache=false --cleanup=true"""
+              sh """/kaniko/executor --dockerfile=Dockerfile --context=git://github.com/gogoyooni/kaniko-test.git --destination=${params.IMAGE_REGISTRY_ACCOUNT}/${params.IMAGE_NAME}:${env.BUILD_NUMBER} --cache=false --cleanup=true"""
             }
         }
     }
