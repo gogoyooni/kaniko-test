@@ -9,33 +9,38 @@ kind: Pod
 spec:
   containers:
   - name: kaniko
-    image: gcr.io/kaniko-project/executor:debug
+    image: gcr.io/kaniko-project/executor:latest
+    args:
+    - "--cache=false"
+    - "--cleanup=true"
     command:
     - /busybox/cat
     tty: true
     volumeMounts:
-      - name: regcred
-        mountPath: /kaniko/.docker
+    - name: kaniko-secret
+      mountPath: /kaniko/.docker
   volumes:
-    - name: regcred
-      secret:
-        secretName: regcred
-        items:
+  - name: kaniko-secret
+    secret:
+      secretName: regcred
+      items:
         - key: .dockerconfigjson
           path: config.json
 """
         }
     }
-
+    
     stages {
         stage('Build and Push with Kaniko') {
             steps {
                 container('kaniko') {
                     sh '''
                         /kaniko/executor \
-                        --context=dir://. \
+                        --context=git://github.com/gogoyooni/kaniko-test.git \
                         --dockerfile=Dockerfile \
-                        --destination=taeyoondev/kaniko-test:v1.2
+                        --destination=taeyoondev/kaniko-test:v1.1 \
+                        --cache=false \
+                        --cleanup=true
                     '''
                 }
             }
