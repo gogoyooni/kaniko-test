@@ -1,39 +1,21 @@
 pipeline {
     agent {
         kubernetes {
+            cloud 'kubernetes'
+            namespace 'devops-tools'
             yaml """
 apiVersion: v1
 kind: Pod
-metadata:
-  labels:
-    jenkins/agent-type: kaniko
-    namespace: devops-tools
 spec:
   containers:
-    - name: jnlp
-      image: jenkins/inbound-agent:latest
-      resources:
-        requests:
-          memory: "256Mi"
-          cpu: "300m"
-        limits:
-          memory: "512Mi"
-          cpu: "500m"
-    - name: kaniko
-      image: gcr.io/kaniko-project/executor:debug
-      command:
-        - /busybox/cat
-      tty: true
-      resources:
-        requests:
-          memory: "400Mi"
-          cpu: "300m"
-        limits:
-          memory: "500Mi"
-          cpu: "500m"
-      volumeMounts:
-        - name: kaniko-secret
-          mountPath: /kaniko/.docker/
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command:
+    - /busybox/cat
+    tty: true
+    volumeMounts:
+      - name: regcred
+        mountPath: /kaniko/.docker
   volumes:
     - name: regcred
       secret:
@@ -41,34 +23,22 @@ spec:
         items:
         - key: .dockerconfigjson
           path: config.json
-            """
+"""
         }
-    }
-
-    environment {
-        DOCKERHUB_USERNAME = "taeyoondev"
-        IMAGE_NAME = "kaniko-test"
     }
 
     stages {
-        stage("Build Docker Image & Push to Docker Hub") {
+        stage('Build and Push with Kaniko') {
             steps {
-                container("kaniko") {
-                    script {
-                        def context = "."
-                        def dockerfile = "Dockerfile"
-                        def image = "${DOCKERHUB_USERNAME}/${IMAGE_NAME}:v1.2"
-
-                        sh "/kaniko/executor --context ${context} --dockerfile ${dockerfile} --destination ${image}"
-                    }
+                container('kaniko') {
+                    sh '''
+                        /kaniko/executor \
+                        --context=dir://. \
+                        --dockerfile=Dockerfile \
+                        --destination=taeyoondev/kaniko-test:v1.2
+                    '''
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            echo "The process is completed."
         }
     }
 }
