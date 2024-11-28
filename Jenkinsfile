@@ -14,11 +14,11 @@ spec:
       image: jenkins/inbound-agent:latest
       resources:
         requests:
+          memory: "256Mi"
+          cpu: "300m"
+        limits:
           memory: "512Mi"
           cpu: "500m"
-        limits:
-          memory: "1024Mi"
-          cpu: "1000m"
     - name: kaniko
       image: gcr.io/kaniko-project/executor:debug
       command:
