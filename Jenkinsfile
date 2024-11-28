@@ -8,6 +8,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: kaniko
+  namespace: default
 spec:
   containers:
   - name: kaniko
