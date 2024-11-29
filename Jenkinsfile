@@ -1,15 +1,16 @@
 pipeline {
     agent {
         kubernetes {
-            cloud 'kubernetes'
-            namespace 'devops-tools'
+            cloud 'kubernetes' // 이 부분은 Jenkins에서 정의된 Kubernetes 클라우드를 사용
+            namespace 'devops-tools' // devops-tools 네임스페이스 내에서 파드를 생성
+            label 'kubeagent' // PodTemplate에서 정의한 label과 일치시켜야 합니다.
             yaml """
 apiVersion: v1
 kind: Pod
 spec:
   containers:
   - name: jnlp
-    image: jenkins/inbound-agent:latest-jdk11
+    image: jenkins/inbound-agent:latest
     resources:
       requests:
         memory: "256Mi"
