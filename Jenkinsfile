@@ -8,11 +8,17 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
+  - name: jnlp
+    image: jenkins/inbound-agent:latest
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "300m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
   - name: kaniko
     image: gcr.io/kaniko-project/executor:latest
-    args:
-    - "--cache=false"
-    - "--cleanup=true"
     command:
     - /busybox/cat
     tty: true
@@ -44,6 +50,12 @@ spec:
                     '''
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline completed'
         }
     }
 }
