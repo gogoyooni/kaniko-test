@@ -14,12 +14,19 @@ spec:
     args:
     - "--dockerfile=Dockerfile"
     - "--context=git://github.com/gogoyooni/kaniko-test.git" #git://github.com/kunchalavikram1427/connected-app.git#refs/heads/master
-    - "--destination=taeyoondev/kaniko-test:1.1"
     - "--cache=false"
     - "--cleanup=true"
+    tty: true
     volumeMounts:
       - name: kaniko-secret
         mountPath: /kaniko/.docker
+  - name: kubectl
+    image: docker.io/bitnami/kubectl
+    command:
+    - cat
+    tty: true
+    securityContext:
+    runAsUser: 1000
   restartPolicy: Never
   volumes:
     - name: kaniko-secret
@@ -44,6 +51,20 @@ spec:
                 sh """#!/busyboox/sh
                     echo "FROM jenkins/inbound-agent:latest" > Dockerfile
                     /kaniko/executor --context `pwd` --destination $IMAGE_REGISTRY_ACCOUNT/$IMAGE_NAME:$env.BUILD_NUMBER --cache false --cleanup true"""
+                }
+            }
+        }
+
+        stage('Test Kubernetes Connection') {
+            steps {
+                container('kubectl') {
+                    script {
+                        sh """
+                            echo "Testing kubectl connection..."
+                            kubectl version --client
+                            kubectl get pods
+                        """
+                    }
                 }
             }
         }
