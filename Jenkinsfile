@@ -13,15 +13,16 @@ spec:
     image: gcr.io/kaniko-project/executor:debug
     tty: true
     volumeMounts:
-    - name: kaniko-secret
-      mountPath: /kaniko/.docker
+      - name: kaniko-secret
+        mountPath: /kaniko/.docker
   - name: kubectl
-    image: bitnami/kubectl
+    image: docker.io/bitnami/kubectl
     command:
     - cat
     tty: true
     securityContext:
     runAsUser: 1000
+  restartPolicy: Never
   volumes:
     - name: kaniko-secret
       secret:
@@ -39,23 +40,18 @@ spec:
     }
 
     stages {
-         stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
         stage('Build and Tag Docker Image') {
             steps {
                 container('kaniko') {
-                 sh '''
+                    script {
+                        sh '''
                             /kaniko/executor \
                             --context=${WORKSPACE} \
                             --dockerfile=${WORKSPACE}/Dockerfile \
                             --destination=${DOCKER_IMAGE}:${DOCKER_TAG}
-                            --cache=false
-                            --cleanup=true
                         '''
+                    }
+                }
             }
         }
 
