@@ -79,7 +79,6 @@ spec:
                             echo "Application deployed! Service details:"
                             kubectl get svc kaniko-test-service
                         """
-                        """
                     }
                 }
             }
