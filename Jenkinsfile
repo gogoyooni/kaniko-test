@@ -6,7 +6,6 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: kaniko
-  namespace: devops-tools
 spec:
   containers:
   - name: kaniko
@@ -21,15 +20,12 @@ spec:
     - cat
     tty: true
     securityContext:
-    runAsUser: 1000
+      runAsUser: 1000
   restartPolicy: Never
   volumes:
     - name: kaniko-secret
       secret:
-        secretName: dockercred  // Docker Hub 인증 정보
-        items:
-        - key: .dockerconfigjson
-          path: config.json
+        secretName: dockercred
 """
         }
     }
