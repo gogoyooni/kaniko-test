@@ -11,23 +11,17 @@ spec:
   containers:
   - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
-    args:
-    - "--dockerfile=Dockerfile"
-    - "--context=git://github.com/gogoyooni/kaniko-test.git" #git://github.com/kunchalavikram1427/connected-app.git#refs/heads/master
-    - "--cache=false"
-    - "--cleanup=true"
     tty: true
     volumeMounts:
-      - name: kaniko-secret
-        mountPath: /kaniko/.docker
+    - name: kaniko-secret
+      mountPath: /kaniko/.docker
   - name: kubectl
-    image: docker.io/bitnami/kubectl
+    image: bitnami/kubectl
     command:
     - cat
     tty: true
     securityContext:
     runAsUser: 1000
-  restartPolicy: Never
   volumes:
     - name: kaniko-secret
       secret:
@@ -40,18 +34,28 @@ spec:
     }
 
     environment {
-        IMAGE_NAME = 'kaniko-test'
-        IMAGE_REGISTRY_ACCOUNT = 'taeyoondev'
+        DOCKER_IMAGE = "taeyoondev/kaniko-test"
+        DOCKER_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
+         stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
         stage('Build and Tag Docker Image') {
             steps {
-                container(name:'kaniko', shell: '/busyboxy/sh') {
-                sh """#!/busyboox/sh
-                    echo "FROM jenkins/inbound-agent:latest" > Dockerfile
-                    /kaniko/executor --context `pwd` --destination $IMAGE_REGISTRY_ACCOUNT/$IMAGE_NAME:$env.BUILD_NUMBER --cache false --cleanup true"""
-                }
+                container('kaniko') {
+                 sh '''
+                            /kaniko/executor \
+                            --context=${WORKSPACE} \
+                            --dockerfile=${WORKSPACE}/Dockerfile \
+                            --destination=${DOCKER_IMAGE}:${DOCKER_TAG}
+                            --cache=false
+                            --cleanup=true
+                        '''
             }
         }
 
