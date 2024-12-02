@@ -10,6 +10,8 @@ spec:
   containers:
   - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
+    command:
+    - /busybox/cat
     tty: true
     volumeMounts:
       - name: kaniko-secret
@@ -17,7 +19,9 @@ spec:
   - name: kubectl
     image: docker.io/bitnami/kubectl
     command:
-    - cat
+    - sleep
+    args:
+    - 99d
     tty: true
     securityContext:
       runAsUser: 1000
