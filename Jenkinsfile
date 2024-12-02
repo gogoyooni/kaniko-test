@@ -70,23 +70,46 @@ spec:
                             kubectl version --client
                             kubectl get pods
 
-                            cat ${WORKSPACE}/k8s/deployment.yaml | sed 's/\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
+                            # deployment.yaml에서 namespace 추출
+                        echo "Extracting namespace from deployment.yaml..."
+                        NAMESPACE=$(cat ${WORKSPACE}/k8s/deployment.yaml | grep 'namespace:' | head -n1 | awk '{print $2}')
+                        echo "Detected namespace: ${NAMESPACE}"
 
-                            # namespace가 없으면 생성
-                            echo "Creating namespace..."
-                            kubectl create namespace test-namespace --dry-run=client -o yaml | kubectl apply -f -
-                            
-                            # namespace 생성 확인
-                            echo "Namespace created:"
-                            kubectl get namespace test-namespace
-                            
-                            # deployment가 완전히 롤아웃될 때까지 대기
-                            echo "Waiting for deployment to rollout..."
-                            kubectl rollout status deployment/kaniko-test-app -n test-namespace
-                            
-                            # 서비스 정보 출력
-                            echo "Application deployed! Service details:"
-                            kubectl get svc kaniko-test-service -n test-namespace
+                        # namespace 존재 여부 확인
+                        echo "Checking namespace..."
+                        if kubectl get namespace ${NAMESPACE} > /dev/null 2>&1; then
+                            echo "Namespace ${NAMESPACE} already exists"
+                        else
+                            echo "Creating namespace ${NAMESPACE}..."
+                            kubectl create namespace ${NAMESPACE}
+                        fi
+
+                        # deployment.yaml의 TAG 변수 치환 및 적용
+                        echo "Applying deployment configuration..."
+                        cat ${WORKSPACE}/k8s/deployment.yaml | sed 's/\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
+
+                        # deployment 존재 여부 확인 및 롤아웃 대기
+                        echo "Checking deployment status..."
+                        if kubectl get deployment kaniko-test-app -n ${NAMESPACE} > /dev/null 2>&1; then
+                            echo "Deployment exists. Waiting for rollout..."
+                            kubectl rollout status deployment/kaniko-test-app -n ${NAMESPACE}
+                        else
+                            echo "Deployment doesn't exist yet. Creating and waiting for rollout..."
+                            cat ${WORKSPACE}/k8s/deployment.yaml | sed 's/\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
+                            kubectl rollout status deployment/kaniko-test-app -n ${NAMESPACE}
+                        fi
+
+                        # 서비스 존재 여부 확인 및 정보 출력
+                        echo "Checking service status..."
+                        if kubectl get svc kaniko-test-service -n ${NAMESPACE} > /dev/null 2>&1; then
+                            echo "Service exists. Details:"
+                            kubectl get svc kaniko-test-service -n ${NAMESPACE}
+                        else
+                            echo "Service doesn't exist yet. Creating..."
+                            cat ${WORKSPACE}/k8s/deployment.yaml | sed 's/\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
+                            echo "Service created. Details:"
+                            kubectl get svc kaniko-test-service -n ${NAMESPACE}
+                        fi
                         """
                     }
                 }
