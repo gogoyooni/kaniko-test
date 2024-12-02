@@ -3,6 +3,7 @@ pipeline {
         kubernetes {
             cloud 'kubernetes'
             label 'kube-agent'  // Pod Template에서 설정한 이름
+            serviceAccount 'jenkins-admin'  // 기존에 생성한 서비스 계정 지정
             yaml """
 apiVersion: v1
 kind: Pod
