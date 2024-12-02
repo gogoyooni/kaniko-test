@@ -66,51 +66,51 @@ spec:
                 container('kubectl') {
                     script {
                         sh """
-                            echo "Testing kubectl connection..."
-                            kubectl version --client
-                            kubectl get pods
+                        echo "Testing kubectl connection..."
+                        kubectl version --client
+                        kubectl get pods
 
-                            # deployment.yaml에서 namespace 추출
+                        # deployment.yaml에서 namespace 추출
                         echo "Extracting namespace from deployment.yaml..."
-                        NAMESPACE=$(cat ${WORKSPACE}/k8s/deployment.yaml | grep 'namespace:' | head -n1 | awk '{print $2}')
-                        echo "Detected namespace: ${NAMESPACE}"
+                        NAMESPACE=\$(cat \${WORKSPACE}/k8s/deployment.yaml | grep 'namespace:' | head -n1 | awk '{print \$2}')
+                        echo "Detected namespace: \${NAMESPACE}"
 
                         # namespace 존재 여부 확인
                         echo "Checking namespace..."
-                        if kubectl get namespace ${NAMESPACE} > /dev/null 2>&1; then
-                            echo "Namespace ${NAMESPACE} already exists"
+                        if kubectl get namespace \${NAMESPACE} > /dev/null 2>&1; then
+                            echo "Namespace \${NAMESPACE} already exists"
                         else
-                            echo "Creating namespace ${NAMESPACE}..."
-                            kubectl create namespace ${NAMESPACE}
+                            echo "Creating namespace \${NAMESPACE}..."
+                            kubectl create namespace \${NAMESPACE}
                         fi
 
                         # deployment.yaml의 TAG 변수 치환 및 적용
                         echo "Applying deployment configuration..."
-                        cat ${WORKSPACE}/k8s/deployment.yaml | sed 's/\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
+                        cat \${WORKSPACE}/k8s/deployment.yaml | sed 's/\\\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
 
                         # deployment 존재 여부 확인 및 롤아웃 대기
                         echo "Checking deployment status..."
-                        if kubectl get deployment kaniko-test-app -n ${NAMESPACE} > /dev/null 2>&1; then
+                        if kubectl get deployment kaniko-test-app -n \${NAMESPACE} > /dev/null 2>&1; then
                             echo "Deployment exists. Waiting for rollout..."
-                            kubectl rollout status deployment/kaniko-test-app -n ${NAMESPACE}
+                            kubectl rollout status deployment/kaniko-test-app -n \${NAMESPACE}
                         else
                             echo "Deployment doesn't exist yet. Creating and waiting for rollout..."
-                            cat ${WORKSPACE}/k8s/deployment.yaml | sed 's/\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
-                            kubectl rollout status deployment/kaniko-test-app -n ${NAMESPACE}
+                            cat \${WORKSPACE}/k8s/deployment.yaml | sed 's/\\\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
+                            kubectl rollout status deployment/kaniko-test-app -n \${NAMESPACE}
                         fi
 
                         # 서비스 존재 여부 확인 및 정보 출력
                         echo "Checking service status..."
-                        if kubectl get svc kaniko-test-service -n ${NAMESPACE} > /dev/null 2>&1; then
+                        if kubectl get svc kaniko-test-service -n \${NAMESPACE} > /dev/null 2>&1; then
                             echo "Service exists. Details:"
-                            kubectl get svc kaniko-test-service -n ${NAMESPACE}
+                            kubectl get svc kaniko-test-service -n \${NAMESPACE}
                         else
                             echo "Service doesn't exist yet. Creating..."
-                            cat ${WORKSPACE}/k8s/deployment.yaml | sed 's/\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
+                            cat \${WORKSPACE}/k8s/deployment.yaml | sed 's/\\\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
                             echo "Service created. Details:"
-                            kubectl get svc kaniko-test-service -n ${NAMESPACE}
+                            kubectl get svc kaniko-test-service -n \${NAMESPACE}
                         fi
-                        """
+                    """
                     }
                 }
             }
