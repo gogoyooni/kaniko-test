@@ -2,7 +2,7 @@ pipeline {
     agent {
         kubernetes {
             cloud 'kubernetes'
-            label 'kube-agent'  // Pod Template에서 설정한 이름
+            inheritFrom 'kube-agent'  // Pod Template에서 설정한 이름
             serviceAccount 'jenkins-admin'  // 기존에 생성한 서비스 계정 지정
             yaml """
 apiVersion: v1
@@ -70,14 +70,23 @@ spec:
                             kubectl version --client
                             kubectl get pods
 
-                              cat ${WORKSPACE}/k8s/deployment.yaml | sed 's/\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
+                            cat ${WORKSPACE}/k8s/deployment.yaml | sed 's/\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
+
+                            # namespace가 없으면 생성
+                            echo "Creating namespace..."
+                            kubectl create namespace test-namespace --dry-run=client -o yaml | kubectl apply -f -
+                            
+                            # namespace 생성 확인
+                            echo "Namespace created:"
+                            kubectl get namespace test-namespace
                             
                             # deployment가 완전히 롤아웃될 때까지 대기
-                            kubectl rollout status deployment/kaniko-test-app -n devops-tools
+                            echo "Waiting for deployment to rollout..."
+                            kubectl rollout status deployment/kaniko-test-app -n test-namespace
                             
                             # 서비스 정보 출력
                             echo "Application deployed! Service details:"
-                            kubectl get svc kaniko-test-service -n devops-tools
+                            kubectl get svc kaniko-test-service -n test-namespace
                         """
                     }
                 }
