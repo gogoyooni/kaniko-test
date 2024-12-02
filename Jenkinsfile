@@ -1,6 +1,8 @@
 pipeline {
     agent {
         kubernetes {
+            cloud 'kubernetes'
+            label 'kube-agent'  // Pod Template에서 설정한 이름
             yaml """
 apiVersion: v1
 kind: Pod
