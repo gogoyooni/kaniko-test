@@ -26,6 +26,9 @@ spec:
     - name: kaniko-secret
       secret:
         secretName: dockercred
+        items:
+        - key: .dockerconfigjson
+          path: config.json
 """
         }
     }
