@@ -6,7 +6,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: kaniko
-  namespace: default
+  namespace: devops-tools
 spec:
   containers:
   - name: kaniko
