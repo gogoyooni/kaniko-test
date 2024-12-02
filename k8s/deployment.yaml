@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kaniko-test-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kaniko-test-app
+  template:
+    metadata:
+      labels:
+        app: kaniko-test-app
+    spec:
+      containers:
+      - name: kaniko-test-app
+        image: taeyoondev/kaniko-test:${TAG}  # Jenkins에서 변수 치환
+        ports:
+        - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kaniko-test-service
+  namespace: devops-tools
+spec:
+  selector:
+    app: kaniko-test-app
+  ports:
+  - port: 80
+    targetPort: 5000
+  type: NodePort

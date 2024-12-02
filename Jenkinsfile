@@ -69,6 +69,16 @@ spec:
                             echo "Testing kubectl connection..."
                             kubectl version --client
                             kubectl get pods
+
+                            cat ${WORKSPACE}/k8s/deployment.yaml | sed 's/\${TAG}/${DOCKER_TAG}/g' | kubectl apply -f -
+                            
+                            # deployment가 완전히 롤아웃될 때까지 대기
+                            kubectl rollout status deployment/kaniko-test-app
+                            
+                            # 서비스 정보 출력
+                            echo "Application deployed! Service details:"
+                            kubectl get svc kaniko-test-service
+                        """
                         """
                     }
                 }
