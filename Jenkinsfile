@@ -26,7 +26,7 @@ spec:
   volumes:
     - name: kaniko-secret
       secret:
-        secretName: regcred  // Docker Hub 인증 정보
+        secretName: dockercred  // Docker Hub 인증 정보
         items:
         - key: .dockerconfigjson
           path: config.json
